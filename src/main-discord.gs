@@ -140,9 +140,9 @@ function endfieldSignIn(cred, gameRoleId, accountName) {
       const info = json.data.resourceInfoMap[a.id];
       return `${info.name} x${info.count}`;
     }).join(', ');
-    return `Endfield (Role: ${gameRoleId}): ${awards}`;
+    return `Endfield: ${awards}`;
   } else {
-    return `Endfield (Role: ${gameRoleId}): ${discordPing()}${json.message}`;
+    return `Endfield: ${discordPing()}${json.message}`;
   }
 }
 
