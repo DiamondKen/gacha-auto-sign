@@ -1,11 +1,18 @@
 const profiles = [
   {
-    token: "ltoken_v2=gBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxCY; ltuid_v2=26XXXXX20;",
+    token: "ltoken_v2=v2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; ltuid_v2=26XXXXX20;",
     genshin: true,
     honkai_star_rail: true,
     honkai_3: false,
     tears_of_themis: false,
     zenless_zone_zero: false,
+    endfield: true,
+    endfield_creds: [
+      {
+        cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        gameRoleIds: ["3_xxxxxxxx_x"]
+      }
+    ],
     accountName: "你的名字"
   }
 ];
@@ -14,7 +21,7 @@ const discord_notify = true
 const myDiscordID = ""
 const discordWebhook = ""
 
-/** 以上為設定檔，請參考 https://github.com/canaria3406/hoyolab-auto-sign 之說明進行設定**/
+/** 以上為設定檔，請參考 https://github.com/DiamondKen/gacha-auto-sign 之說明進行設定**/
 /** 以下為程式碼，請勿更動 **/
 
 const urlDict = {
@@ -22,7 +29,8 @@ const urlDict = {
   Star_Rail: 'https://sg-public-api.hoyolab.com/event/luna/os/sign?lang=zh-tw&act_id=e202303301540311',
   Honkai_3: 'https://sg-public-api.hoyolab.com/event/mani/sign?lang=zh-tw&act_id=e202110291205111',
   Tears_of_Themis: 'https://sg-public-api.hoyolab.com/event/luna/os/sign?lang=zh-tw&act_id=e202308141137581',
-  Zenless_Zone_Zero: 'https://sg-public-api.hoyolab.com/event/luna/zzz/os/sign?lang=zh-tw&act_id=e202406031448091'
+  Zenless_Zone_Zero: 'https://sg-public-api.hoyolab.com/event/luna/zzz/os/sign?lang=zh-tw&act_id=e202406031448091',
+  Endfield: 'https://zonai.skport.com/web/v1/game/endfield/attendance'
 };
 
 /** 
@@ -32,27 +40,53 @@ const headerDict = {
   default: {
     'Accept': 'application/json, text/plain, */*',
     'Accept-Encoding': 'gzip, deflate, br',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0',
+    'dnt': '1',
+  },
+  Genshin: {
     'Connection': 'keep-alive',
     'x-rpc-app_version': '2.34.1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
     'x-rpc-client_type': '4',
     'Referer': 'https://act.hoyolab.com/',
     'Origin': 'https://act.hoyolab.com',
   },
-  Genshin: {
-
-  },
   Star_Rail: {
-
+    'Connection': 'keep-alive',
+    'x-rpc-app_version': '2.34.1',
+    'x-rpc-client_type': '4',
+    'Referer': 'https://act.hoyolab.com/',
+    'Origin': 'https://act.hoyolab.com',
   },
   Honkai_3: {
-
+    'Connection': 'keep-alive',
+    'x-rpc-app_version': '2.34.1',
+    'x-rpc-client_type': '4',
+    'Referer': 'https://act.hoyolab.com/',
+    'Origin': 'https://act.hoyolab.com',
   },
   Tears_of_Themis: {
-
+    'Connection': 'keep-alive',
+    'x-rpc-app_version': '2.34.1',
+    'x-rpc-client_type': '4',
+    'Referer': 'https://act.hoyolab.com/',
+    'Origin': 'https://act.hoyolab.com',
   },
   Zenless_Zone_Zero: {
+    'Connection': 'keep-alive',
+    'x-rpc-app_version': '2.34.1',
+    'x-rpc-client_type': '4',
+    'Referer': 'https://act.hoyolab.com/',
+    'Origin': 'https://act.hoyolab.com',
     'x-rpc-signgame': 'zzz',
+  },
+  Endfield: {
+    'accept-language': 'en-US,en;q=0.9',
+    'content-type': 'application/json',
+    'origin': 'https://game.skport.com',
+    'platform': '3',
+    'referer': 'https://game.skport.com/',
+    'sk-language': 'en',
+    'vname': '1.0.0'
   }
 }
 
@@ -69,6 +103,48 @@ function discordPing() {
   return myDiscordID ? `<@${myDiscordID}> ` : '';
 }
 
+function generateRandomSign() {
+  const chars = '0123456789abcdef';
+  let sign = '';
+  for (let i = 0; i < 32; i++) {
+    sign += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return sign;
+}
+
+function endfieldSignIn(cred, gameRoleId, accountName) {
+  const url = urlDict.Endfield;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const sign = generateRandomSign();
+
+  const headers = {
+    ...headerDict.default,
+    ...headerDict.Endfield,
+    'cred': cred,
+    'sign': sign,
+    'sk-game-role': gameRoleId,
+    'timestamp': timestamp.toString()
+  };
+
+  const response = UrlFetchApp.fetch(url, {
+    method: 'POST',
+    headers: headers,
+    muteHttpExceptions: true
+  });
+
+  const json = JSON.parse(response.getContentText());
+
+  if (json.code === 0) {
+    const awards = json.data.awardIds.map(a => {
+      const info = json.data.resourceInfoMap[a.id];
+      return `${info.name} x${info.count}`;
+    }).join(', ');
+    return `終末地: ${awards}`;
+  } else {
+    return `終末地: ${discordPing()}${json.message}`;
+  }
+}
+
 function autoSignFunction({
   token,
   genshin = false,
@@ -76,15 +152,33 @@ function autoSignFunction({
   honkai_3 = false,
   tears_of_themis = false,
   zenless_zone_zero = false,
+  endfield = false,
+  endfield_creds = [],
   accountName
 }) {
   const urlsnheaders = [];
 
-  if (genshin) urlsnheaders.push({ url: urlDict.Genshin, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Genshin"]} });
-  if (honkai_star_rail) urlsnheaders.push({ url: urlDict.Star_Rail, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Star_Rail"]} });
-  if (honkai_3) urlsnheaders.push({ url: urlDict.Honkai_3, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Honkai_3"]} });
-  if (tears_of_themis) urlsnheaders.push({ url: urlDict.Tears_of_Themis, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Tears_of_Themis"]} });
-  if (zenless_zone_zero) urlsnheaders.push({ url: urlDict.Zenless_Zone_Zero, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Zenless_Zone_Zero"]} });
+  if (genshin) urlsnheaders.push({ url: urlDict.Genshin, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Genshin"]}, type: 'hoyo' });
+  if (honkai_star_rail) urlsnheaders.push({ url: urlDict.Star_Rail, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Star_Rail"]}, type: 'hoyo' });
+  if (honkai_3) urlsnheaders.push({ url: urlDict.Honkai_3, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Honkai_3"]}, type: 'hoyo' });
+  if (tears_of_themis) urlsnheaders.push({ url: urlDict.Tears_of_Themis, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Tears_of_Themis"]}, type: 'hoyo' });
+  if (zenless_zone_zero) urlsnheaders.push({ url: urlDict.Zenless_Zone_Zero, headers: { Cookie: token, ...headerDict["default"], ...headerDict["Zenless_Zone_Zero"]}, type: 'hoyo' });
+
+  const endfieldRequests = [];
+
+  if (endfield && endfield_creds && endfield_creds.length > 0) {
+    for (const endfieldCred of endfield_creds) {
+      for (const gameRoleId of endfieldCred.gameRoleIds) {
+        endfieldRequests.push({
+          cred: endfieldCred.cred,
+          gameRoleId: gameRoleId,
+          type: 'endfield'
+        });
+      }
+    }
+  }
+
+  const allRequests = [...urlsnheaders, ...endfieldRequests];
 
   const options = {
     method: 'POST',
@@ -95,40 +189,49 @@ function autoSignFunction({
 
   var sleepTime = 0
   const httpResponses = []
-  for (const urlnheaders of urlsnheaders) {
+  for (const request of allRequests) {
     Utilities.sleep(sleepTime);
-    httpResponses.push(UrlFetchApp.fetch(urlnheaders.url, { ...options, headers: urlnheaders.headers }));
     sleepTime = 1000;
-  }
-  
-  for (const [i, hoyolabResponse] of httpResponses.entries()) {
-    const responseJson = JSON.parse(hoyolabResponse);
-    const checkInResult = responseJson.message;
-    const enGameName = Object.keys(urlDict).find(key => urlDict[key] === urlsnheaders[i].url)
-    switch (enGameName) {
-      case 'Genshin':
-      gameName = '原神';
-      break;
-      case 'Star_Rail':
-      gameName = '星穹鐵道';
-      break;
-      case 'Honkai_3':
-      gameName = '崩壞3rd';
-      break;
-      case 'Tears_of_Themis':
-      gameName = '未定事件簿';
-      break;
-      case 'Zenless_Zone_Zero':
-      gameName = '絕區零';
-      break;
-    }
-    const isError = checkInResult != "OK";
-    const bannedCheck = responseJson.data?.gt_result?.is_risk;
 
-    if (bannedCheck) {
-      response += `\n${gameName}: ${discordPing()} 自動簽到失敗，受到圖形驗證阻擋。`;
-    } else {
-      response += `\n${gameName}: ${isError ? discordPing() : ""}${checkInResult}`;
+    if (request.type === 'hoyo') {
+      httpResponses.push({ response: UrlFetchApp.fetch(request.url, { ...options, headers: request.headers }), type: 'hoyo' });
+    } else if (request.type === 'endfield') {
+      const endfieldResult = endfieldSignIn(request.cred, request.gameRoleId, accountName);
+      response += `\n${endfieldResult}`;
+    }
+  }
+
+  for (const [i, hoyolabData] of httpResponses.entries()) {
+    if (hoyolabData.type === 'hoyo') {
+      const hoyolabResponse = hoyolabData.response;
+      const responseJson = JSON.parse(hoyolabResponse);
+      const checkInResult = responseJson.message;
+      const enGameName = Object.keys(urlDict).find(key => urlDict[key] === allRequests.filter(r => r.type === 'hoyo')[i].url)
+      switch (enGameName) {
+        case 'Genshin':
+          gameName = '原神';
+          break;
+        case 'Star_Rail':
+          gameName = '星穹鐵道';
+          break;
+        case 'Honkai_3':
+          gameName = '崩壞3rd';
+          break;
+        case 'Tears_of_Themis':
+          gameName = '未定事件簿';
+          break;
+        case 'Zenless_Zone_Zero':
+          gameName = '絕區零';
+          break;
+      }
+      const isError = checkInResult != "OK";
+      const bannedCheck = responseJson.data?.gt_result?.is_risk;
+
+      if (bannedCheck) {
+        response += `\n${gameName}: ${discordPing()} 自動簽到失敗，受到圖形驗證阻擋。`;
+      } else {
+        response += `\n${gameName}: ${isError ? discordPing() : ""}${checkInResult}`;
+      }
     }
   }
 
@@ -137,7 +240,7 @@ function autoSignFunction({
 
 function postWebhook(data) {
   let payload = JSON.stringify({
-    'username': '自動簽到',
+    'username': 'gacha-auto-sign',
     'avatar_url': 'https://i.imgur.com/LI1D4hP.png',
     'content': data
   });
