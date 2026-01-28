@@ -1,7 +1,7 @@
 <h1 align="center">
     <img width="120" height="120" src="pic/logo.svg" alt=""><br>
-    hoyolab-auto-sign
-</h1>
+    gacha-auto-sign
+ </h1>
 
 <p align="center">
     <img src="https://img.shields.io/github/license/canaria3406/hoyolab-auto-sign?style=flat-square" alt="">
@@ -9,8 +9,8 @@
     <br><a href="/README_zh-tw.md">繁體中文</a>　<b>English</b>　<a href="/README_ru-ru.md">Русский</a>
 </p>
 
-A lightweight, secure, and free script that automatically collect HoYoLAB daily check in rewards.
-Supports Genshin Impact, Honkai Impact 3rd, and Honkai: Star Rail, Tears of Themis, Zenless Zone Zero. Support multiple accounts.
+A lightweight, secure, and free script that automatically collect daily check in rewards.
+Supports Genshin Impact, Honkai Impact 3rd, Honkai: Star Rail, Tears of Themis, Zenless Zone Zero, and Endfield. Support multiple accounts.
 
 ## Features
 * **Lightweight** - The script only requires minimal configuration and is only 90 lines of code.
@@ -34,12 +34,19 @@ Supports Genshin Impact, Honkai Impact 3rd, and Honkai: Star Rail, Tears of Them
 ```javascript
 const profiles = [
   {
-    token: "ltoken_v2=v2_CANARIAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX3406; ltuid_v2=26XXXXX20;",
+    token: "ltoken_v2=v2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; ltuid_v2=26XXXXX20;",
     genshin: true,
     honkai_star_rail: true,
     honkai_3: false,
     tears_of_themis: false,
     zenless_zone_zero: false,
+    endfield: true,
+    endfield_creds: [
+      {
+        cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        gameRoleIds: ["3_xxxxxxxx_3"]
+      }
+    ],
     accountName: "YOUR NICKNAME"
   }
 ];
@@ -96,11 +103,63 @@ const profiles = [
 
 7. **accountName** - Please enter your customized nickname.
 
-   Please enter your customized HoYoLAB or in-game nickname here.
+    Please enter your customized HoYoLAB or in-game nickname here.
+  
+  </details>
+  
+  <details>
+  <summary><b>Endfield settings</b></summary>
 
-</details>
+1. **endfield**
 
-<details>
+   Whether to enable auto check in for Endfield.
+   If you want, set it to true. If not, please set it to false.
+
+2. **endfield_creds**
+
+   Array of credential objects for Endfield accounts. Each object contains:
+   - `cred`: Your Endfield authentication credential (32-character token)
+   - `gameRoleIds`: Array of game role IDs to sign in (e.g., `["3_6484152825_3"]`)
+
+   **How to get cred and gameRoleId:**
+   - Log into [Endfield Daily Checkin page](https://game.skport.com/endfield/sign-in)
+   - Open browser DevTools (F12) → Network tab
+   - Sign in manually once to capture requests
+   - Filter and find for `endfield/attendance` or `attendance`
+   - In Header Tab, Scroll down to Request Headers
+   - Copy `cred` header value into the same field in `endfield_creds` **(DO NOT GIVE THIS ANYONE, THIS IS YOUR CREDENTIAL)**
+   - Copy `sk-game-role` header value into the same field in `endfield_creds` 
+      - The `sk-game-role` header value Format should be something similar like this: `3_{YOUR_INGAME_UID}_3`
+
+   **Example:**
+   ```javascript
+   endfield: true,
+   endfield_creds: [
+     {
+       cred: "8Vxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       gameRoleIds: ["3_1234567890_3"]
+     }
+   ]
+   ```
+
+   **Multiple Game Roles:**
+   If you have multiple game roles (multiple accounts or servers), add them to array:
+   ```javascript
+   endfield_creds: [
+     {
+       cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       gameRoleIds: ["3_6234567890_3", "3_1876543210_3"]
+     }
+   ]
+   ```
+
+3. **accountName** - Please enter your customized nickname.
+
+   Please enter your customized nickname here.
+
+   </details>
+  
+  <details>
 <summary><b>discord notify settings (only for <a href="https://github.com/canaria3406/hoyolab-auto-sign/blob/main/src/main-discord.gs">Discord version</a>)</b></summary>
 
 ```javascript
@@ -215,4 +274,5 @@ const telegramBotToken = "6XXXXXXXXX:AAAAAAAAAAXXXXXXXXXX8888888888Peko"
 2023-04-27 Add switch for Discord notify.
 2023-05-12 Update get token process[#2](https://github.com/canaria3406/hoyolab-auto-sign/pull/2).
 2023-05-12 Add Telegram notify support[#3](https://github.com/canaria3406/hoyolab-auto-sign/pull/3).
-2023-05-13 Support multiple HoYoLAB accounts[#4](https://github.com/canaria3406/hoyolab-auto-sign/pull/4)
+2023-05-13 Support multiple HoYoLAB accounts[#4](https://github.com/canaria3406/hoyolab-auto-sign/pull/4).
+2026-01-28 Add Endfield auto sign-in support.
