@@ -13,10 +13,14 @@ A lightweight, secure, and free script that automatically collect daily check in
 Supports Genshin Impact, Honkai Impact 3rd, Honkai: Star Rail, Tears of Themis, Zenless Zone Zero, and Endfield. Support multiple accounts.
 
 ## Features
-* **Lightweight** - The script only requires minimal configuration and is only 90 lines of code.
+* **Lightweight** - The script only requires minimal configuration and is well-organized for easy maintenance.
 * **Secure** - The script can be self-deployed to Google Apps Script, no worries about data leaks.
 * **Free** - Google Apps Script is currently a free service.
 * **Simple** - The script can run without a browser and will automatically notify you through Discord or Telegram.
+* **Separated Config** - HoyoLab games and Endfield credentials are organized in separate sections for better clarity.
+* **Proper Error Handling** - Distinguishes between "already checked in" (success) and actual errors.
+* **Comprehensive Logging** - Detailed logs for every step including token refresh, check-in status, and errors.
+* **Proper Signature Generation** - Endfield uses correct HMAC-SHA256 → MD5 signature algorithm with token refresh.
 
 ## Setup
 1. Go to [Google Apps Script](https://script.google.com/home/start) and create a new project with your custom name.
@@ -34,20 +38,26 @@ Supports Genshin Impact, Honkai Impact 3rd, Honkai: Star Rail, Tears of Themis, 
 ```javascript
 const profiles = [
   {
-    token: "ltoken_v2=v2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; ltuid_v2=26XXXXX20;",
-    genshin: true,
-    honkai_star_rail: true,
-    honkai_3: false,
-    tears_of_themis: false,
-    zenless_zone_zero: false,
-    endfield: true,
-    endfield_creds: [
-      {
-        cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-        gameRoleIds: ["3_xxxxxxxx_3"]
-      }
-    ],
-    accountName: "YOUR NICKNAME"
+    accountName: "YOUR NICKNAME",
+    hoyoGames: {
+      token: "ltoken_v2=v2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; ltuid_v2=26XXXXX20;",
+      genshin: true,
+      honkai_star_rail: true,
+      honkai_3: false,
+      tears_of_themis: false,
+      zenless_zone_zero: false
+    },
+    endfield: {
+      creds: [
+        {
+          cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          token: "",
+          skGameRole: "3_xxxxxxxx_3",
+          platform: "3",
+          vName: "1.0.0"
+        }
+      ]
+    }
   }
 ];
 ```
@@ -60,107 +70,126 @@ const profiles = [
 > For more detail:
 > [https://github.com/Joshua-Noakes1/mei-cards#2-getting-your-hoyolab-cookies](https://github.com/Joshua-Noakes1/mei-cards#2-getting-your-hoyolab-cookies)
 
-<details>
-<summary><b>HoYoLAB settings</b></summary>
+ <details>
+ <summary><b>HoYoLAB settings</b></summary>
 
-1. **token** - Please enter the token for HoYoLAB check-in page.
+ 1. **hoyoGames.token** - Please enter token for HoYoLAB check-in page.
 
-   After entering the [HoYoLAB check-in page](https://www.hoyolab.com/circles), press F12 to enter the console.
-   ~~Paste the following code and run it to get the token. Copy the token and fill it in "quotes".~~
+    > HoYoLAB has changed cookie to HttpOnly cookie. It is no longer possible to read cookies by using getToken.js code.
+    > Please use the method of manually copying the cookie to obtain ltoken_v2 and ltuid_v2.
 
-   > HoYoLAB has changed the cookie to HttpOnly cookie. It is no longer possible to read the cookies by using the getToken.js code.
-   > Please use the method of manually copying the cookie to obtain the ltoken_v2 and ltuid_v2.
+ 2. **hoyoGames.genshin**
 
-2. **genshin**
+    Whether to enable auto check in for Genshin Impact.
+    If you want, set it to true. If not, please set it to false, or delete this line.
+    If you do not play Genshin Impact, or your account is not bound to an uid, please set it to false, or delete this line.
 
-   Whether to enable auto check in for Genshin Impact.
-   If you want, set it to true. If not, please set it to false, or delete this line.
-   If you do not play Genshin Impact, or your account is not bound to an uid, please set it to false, or delete this line.
+ 3. **hoyoGames.honkai_star_rail**
 
-3. **honkai_star_rail**
+    Whether to enable auto check in for Honkai: Star Rail.
+    If you want, set it to true. If not, please set it to false, or delete this line.
+    If you do not play Honkai: Star Rail, or your account is not bound to an uid, please set it to false, or delete this line.
 
-   Whether to enable auto check in for Honkai: Star Rail.
-   If you want, set it to true. If not, please set it to false, or delete this line.
-   If you do not play Honkai: Star Rail, or your account is not bound to an uid, please set it to false, or delete this line.
+ 4. **hoyoGames.honkai_3**
 
-4. **honkai_3**
+    Whether to enable auto check in for Honkai Impact 3rd.
+    If you want, set it to true. If not, please set it to false, or delete this line.
+    If you do not play Honkai Impact 3rd, or your account is not bound to an uid, please set it to false, or delete this line.
 
-   Whether to enable auto check in for Honkai Impact 3rd.
-   If you want, set it to true. If not, please set it to false, or delete this line.
-   If you do not play Honkai Impact 3rd, or your account is not bound to an uid, please set it to false, or delete this line.
+ 5. **hoyoGames.tears_of_themis**
 
-5. **tears_of_themis**
+    Whether to enable auto check in for Tears of Themis.
+    If you want, set it to true. If not, please set it to false, or delete this line.
+    If you do not play Tears of Themis, or your account is not bound to an uid, please set it to false, or delete this line.
 
-   Whether to enable auto check in for Tears of Themis.
-   If you want, set it to true. If not, please set it to false, or delete this line.
-   If you do not play Tears of Themis, or your account is not bound to an uid, please set it to false, or delete this line.
+ 6. **hoyoGames.zenless_zone_zero**
 
-6. **zenless_zone_zero**
+    Whether to enable auto check in for Zenless Zone Zero.
+    If you want, set it to true. If not, please set it to false, or delete this line.
+    If you do not play Zenless Zone Zero, or your account is not bound to an uid, please set it to false, or delete this line.
 
-   Whether to enable auto check in for Zenless Zone Zero.
-   If you want, set it to true. If not, please set it to false, or delete this line.
-   If you do not play Zenless Zone Zero, or your account is not bound to an uid, please set it to false, or delete this line.
-
-7. **accountName** - Please enter your customized nickname.
+ 7. **accountName** - Please enter your customized nickname.
 
     Please enter your customized HoYoLAB or in-game nickname here.
-  
-  </details>
-  
-  <details>
-  <summary><b>Endfield settings</b></summary>
-
-1. **endfield**
-
-   Whether to enable auto check in for Endfield.
-   If you want, set it to true. If not, please set it to false.
-
-2. **endfield_creds**
-
-   Array of credential objects for Endfield accounts. Each object contains:
-   - `cred`: Your Endfield authentication credential (32-character token)
-   - `gameRoleIds`: Array of game role IDs to sign in (e.g., `["3_6484152825_3"]`)
-
-   **How to get cred and gameRoleId:**
-   - Log into [Endfield Daily Checkin page](https://game.skport.com/endfield/sign-in)
-   - Open browser DevTools (F12) → Network tab
-   - Sign in manually once to capture requests
-   - Filter and find for `endfield/attendance` or `attendance`
-   - In Header Tab, Scroll down to Request Headers
-   - Copy `cred` header value into the same field in `endfield_creds` **(DO NOT GIVE THIS ANYONE, THIS IS YOUR CREDENTIAL)**
-   - Copy `sk-game-role` header value into the same field in `endfield_creds` 
-      - The `sk-game-role` header value Format should be something similar like this: `3_{YOUR_INGAME_UID}_3`
-
-   **Example:**
-   ```javascript
-   endfield: true,
-   endfield_creds: [
-     {
-       cred: "8Vxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-       gameRoleIds: ["3_1234567890_3"]
-     }
-   ]
-   ```
-
-   **Multiple Game Roles:**
-   If you have multiple game roles (multiple accounts or servers), add them to array:
-   ```javascript
-   endfield_creds: [
-     {
-       cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-       gameRoleIds: ["3_6234567890_3", "3_1876543210_3"]
-     }
-   ]
-   ```
-
-3. **accountName** - Please enter your customized nickname.
-
-   Please enter your customized nickname here.
 
    </details>
-  
-  <details>
-<summary><b>discord notify settings (only for <a href="https://github.com/canaria3406/hoyolab-auto-sign/blob/main/src/main-discord.gs">Discord version</a>)</b></summary>
+
+   <details>
+   <summary><b>Endfield settings</b></summary>
+
+ 1. **endfield**
+
+    Whether to enable auto check in for Endfield.
+    If you want, set it to true. If not, please set it to false, or delete this section.
+
+ 2. **endfield.creds**
+
+    Array of credential objects for Endfield accounts. Each object contains:
+    - `cred`: Your Endfield authentication credential
+    - `token`: Leave empty - will be auto-refreshed by the script
+    - `skGameRole`: Your game role ID (format: `3_{YOUR_INGAME_UID}_3`)
+    - `platform`: Platform ID (default: "3")
+    - `vName`: Game version (default: "1.0.0")
+
+    **How to get cred and skGameRole:**
+    - Log into [Endfield Daily Checkin page](https://game.skport.com/endfield/sign-in)
+    - Open browser DevTools (F12) → Network tab
+    - Sign in manually once to capture requests
+    - Filter and find for `endfield/attendance` or `attendance`
+    - In Header Tab, Scroll down to Request Headers
+    - Copy `cred` header value into the same field in `endfield.creds` **(DO NOT GIVE THIS ANYONE, THIS IS YOUR CREDENTIAL)**
+    - Copy `sk-game-role` header value into the same field in `endfield.creds`
+
+    **Example:**
+    ```javascript
+    endfield: {
+      creds: [
+        {
+          cred: "8Vxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          token: "",
+          skGameRole: "3_1234567890_3",
+          platform: "3",
+          vName: "1.0.0"
+        }
+      ]
+    }
+    ```
+
+    **Multiple Game Roles:**
+    If you have multiple game roles (multiple accounts or servers), add multiple objects to the array:
+    ```javascript
+    endfield: {
+      creds: [
+        {
+          cred: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          token: "",
+          skGameRole: "3_6234567890_3",
+          platform: "3",
+          vName: "1.0.0"
+        },
+        {
+          cred: "yyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          token: "",
+          skGameRole: "3_1876543210_3",
+          platform: "3",
+          vName: "1.0.0"
+        }
+      ]
+    }
+    ```
+
+ 3. **accountName** - Please enter your customized nickname.
+
+    Please enter your customized nickname here.
+
+    </details>
+    
+    </details>
+   
+   </details>
+   
+   <details>
+   <summary><b>discord notify settings (only for <a href="https://github.com/canaria3406/hoyolab-auto-sign/blob/main/src/main-discord.gs">Discord version</a>)</b></summary>
 
 ```javascript
 const discord_notify = true
@@ -217,46 +246,66 @@ const telegramBotToken = "6XXXXXXXXX:AAAAAAAAAAXXXXXXXXXX8888888888Peko"
 </details>
 
 ## Demo
-If the auto check in process is success, it will send "OK".
-If you have already check in today, it will send "Traveler/Trailblazer/Captain, you've already checked in today"
+If auto check in process is success, it will send "OK".
+If you have already check in today, it will send "Traveler/Trailblazer/Captain, you've already checked in today" or display the actual API message.
 
-<details>
+### Important Notes
+
+- **Endfield Token Refresh**: The script automatically refreshes Endfield tokens for secure and persistent authentication.
+- **Proper Signature Generation**: Endfield uses HMAC-SHA256 → MD5 signature algorithm.
+  - Signature algorithm discovered by [HHim8826](https://gist.github.com/HHim8826)
+  - Endfield sign-in script inspired by [cptmacp's gist](https://gist.github.com/cptmacp/1e9a9f20f69c113a0828fea8d13cb34c)
+  - Special thanks to [@HHim8826](https://github.com/HHim8826) and [@cptmacp](https://github.com/cptmacp) for implementation
+- **Error Handling**: The script properly distinguishes between:
+  - "Already Checked In" (retcode -5003) - Treated as success, not an error
+  - "Check-in Successful" (retcode 0) - Successful check-in
+  - CAPTCHA Blocked - Error, script continues with other games
+  - Other Errors - Error with details from API
+- **Logging**: Comprehensive logging for debugging including token refresh, check-in status, and error details.
+
+ <details>
 <summary><b>Single HoYoLAB account auto check-in with Discord notification and ping.</b></summary>
 Enable Genshin Impact and Honkai: Star Rail auto check in, enable Discord notify, ping in Discord.
 
 ```javascript
 const profiles = [
   {
-    token: "account_mid_v2=123xyzabcd_hi; account_id_v2=26XXXXX20; ltoken_v2=v2_CANARIAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX3406; ltmid_v2=123xyzabcd_hi; ltuid_v2=26XXXXX20;",
-    genshin: true,
-    honkai_star_rail: true,
-    accountName: "HuTao"
+    accountName: "HuTao",
+    hoyoGames: {
+      token: "account_mid_v2=123xyzabcd_hi; account_id_v2=26XXXXX20; ltoken_v2=v2_CANARIAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX3406; ltmid_v2=123xyzabcd_hi; ltuid_v2=26XXXXX20;",
+      genshin: true,
+      honkai_star_rail: true
+    }
   }
 ];
 
 const discord_notify = true
 const myDiscordID = "240000800000300040"
-const discordWebhook = "https://discord.com/api/webhooks/10xxxxxxxxxxxxxxx60/6aXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXnB"
+const discordWebhook = "https://discord.com/api/webhooks/10xxxxxxxxxxxxxxx60/6aXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXnB"
 ```
 ![image](https://github.com/canaria3406/hoyolab-auto-sign/blob/main/pic/E02.png)
 
 </details>
 
-<details>
+ <details>
 <summary><b>Two HoYoLAB accounts auto check-in with Telegram notification.</b></summary>
-Enable Genshin Impact auto check-in on accountA, Honkai Impact 3rd auto check-in on accountB, enable Telegram notify.
+Enable Genshin Impact auto check in on accountA, Honkai Impact 3rd auto check in on accountB, enable Telegram notify.
 
 ```javascript
 const profiles = [
   {
-    token: "account_mid_v2=123xyzabcd_hi; account_id_v2=26XXXXX20; ltoken_v2=v2_CANARIAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX3406; ltmid_v2=123xyzabcd_hi; ltuid_v2=26XXXXX20;",
-    genshin: true,
-    accountName: "accountA"
+    accountName: "accountA",
+    hoyoGames: {
+      token: "account_mid_v2=123xyzabcd_hi; account_id_v2=26XXXXX20; ltoken_v2=v2_GENSHINXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX5566; ltmid_v2=123xyzabcd_hi; ltuid_v2=26XXXXX20;",
+      genshin: true
+    }
   },
   {
-    token: "account_mid_v2=456qwertyu_hi; account_id_v2=28XXXXX42; ltoken_v2=v2_GENSHINXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX5566; ltmid_v2=456qwertyu_hi; ltuid_v2=28XXXXX42;",
-    honkai_3: true,
-    accountName: "accountB"
+    accountName: "accountB",
+    hoyoGames: {
+      token: "account_mid_v2=456qwertyu_hi; account_id_v2=28XXXXX42; ltoken_v2=v2_GENSHINXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX5566; ltmid_v2=456qwertyu_hi; ltuid_v2=28XXXXX42;",
+      honkai_3: true
+    }
   }
 ];
 
@@ -276,3 +325,13 @@ const telegramBotToken = "6XXXXXXXXX:AAAAAAAAAAXXXXXXXXXX8888888888Peko"
 2023-05-12 Add Telegram notify support[#3](https://github.com/canaria3406/hoyolab-auto-sign/pull/3).
 2023-05-13 Support multiple HoYoLAB accounts[#4](https://github.com/canaria3406/hoyolab-auto-sign/pull/4).
 2026-01-28 Add Endfield auto sign-in support.
+2026-02-02 Major refactoring with improved error handling, logging, and code organization.
+  - Separated `hoyoGames` and `endfield` configuration for better clarity
+  - Added dedicated `hoyoSignIn()` function for HoYoLab games
+  - Implemented proper Endfield signature generation (HMAC-SHA256 → MD5) with auto token refresh
+  - Enhanced error handling to distinguish between "already checked in" (success) and actual errors
+  - Added comprehensive logging throughout script
+  - Implemented continue-on-error pattern to process all games even when some fail
+  - Separate Discord notifications per profile instead of squishing all results together
+  - Credit to [HHim8826](https://github.com/HHim8826) for signature algorithm discovery
+  - Credit to [cptmacp](https://github.com/cptmacp) for Endfield script inspiration
